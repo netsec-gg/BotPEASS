@@ -42,7 +42,6 @@ def update_lasttimes():
 def get_cves(tt_filter: Time_Type) -> dict:
     now = datetime.datetime.now() - datetime.timedelta(days=1)
     now_str = now.strftime("%Y-%m-%d")
-
     params = {
         "time_modifier": "from",
         "time_start": now_str,
@@ -55,14 +54,12 @@ def get_cves(tt_filter: Time_Type) -> dict:
 def filter_cves(cves: list, last_time: datetime.datetime, tt_filter: Time_Type) -> (list, datetime.datetime):
     filtered_cves = []
     new_last_time = last_time
-
     for cve in cves:
         cve_time = datetime.datetime.strptime(cve[tt_filter.value], TIME_FORMAT)
         if cve_time > last_time:
             filtered_cves.append(cve)
             if cve_time > new_last_time:
                 new_last_time = cve_time
-
     return filtered_cves, new_last_time
 
 def search_exploits(cve_id: str) -> list:
@@ -75,7 +72,19 @@ def search_exploits(cve_id: str) -> list:
         print("VULNERS_API_KEY is not set. Skipping exploit search.")
         return []
 
-def send_message(message: str):
+def send_message(cve_data, exploits=[]):
+    message = (
+        f"🚨 CVE ID: {cve_data['id']}\n"
+        f"Summary: {cve_data.get('summary', 'N/A')}\n"
+        f"CVSS: {cve_data.get('cvss', 'N/A')}\n"
+        f"CWE: {cve_data.get('cwe', 'Unknown')}\n"
+        f"Published: {cve_data.get('Published', 'N/A')}\n"
+        f"Last Modified: {cve_data.get('last-modified', 'N/A')}\n"
+        f"Assigner: {cve_data.get('assigner', 'N/A')}\n"
+        "References:\n" + "\n".join(cve_data.get('references', []))
+    )
+    if exploits:
+        message += "\nExploits:\n" + "\n".join(exploits)
     data = {"content": message}
     response = requests.post(DISCORD_WEBHOOK_URL, json=data)
     if response.status_code != 204:
@@ -92,10 +101,7 @@ def main():
     LAST_NEW_CVE = new_last_new_cve
     for cve in filtered_new_cves:
         exploits = search_exploits(cve['id'])
-        message = f"🚨 New CVE: {cve['id']}\n- CVSS: {cve.get('cvss', 'N/A')}\n- Published: {cve.get('Published', 'N/A')}\n- Summary: {cve.get('summary', 'N/A')[:500]}\n"
-        if exploits:
-            message += "- Exploits:\n" + "\n".join(exploits)
-        send_message(message)
+        send_message(cve, exploits)
 
     # Process modified CVEs
     modified_cves = get_cves(Time_Type.LAST_MODIFIED)["results"]
@@ -103,13 +109,11 @@ def main():
     LAST_MODIFIED_CVE = new_last_modified_cve
     for cve in filtered_modified_cves:
         exploits = search_exploits(cve['id'])
-        message = f"✏️ Modified CVE: {cve['id']}\n- CVSS: {cve.get('cvss', 'N/A')}\n- Last Modified: {cve.get('last-modified', 'N/A')}\n"
-        if exploits:
-            message += "- Exploits:\n" + "\n".join(exploits)
-        send_message(message)
+        send_message(cve, exploits)
 
     update_lasttimes()
 
 if __name__ == "__main__":
     main()
+
 
