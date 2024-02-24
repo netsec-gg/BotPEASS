@@ -11,7 +11,7 @@ from enum import Enum
 CIRCL_LU_URL = "https://cve.circl.lu/api/query"
 CVES_JSON_PATH = join(pathlib.Path(__file__).parent.absolute(), "output/botpeas.json")
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
-DISCORD_WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_URL"
+DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL')
 
 # Initialize global variables for last processed CVE times
 LAST_NEW_CVE = datetime.datetime.now() - datetime.timedelta(days=1)
