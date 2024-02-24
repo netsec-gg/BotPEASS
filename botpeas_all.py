@@ -65,7 +65,7 @@ def search_exploits(cve_id: str) -> list:
     vulners_api_key = os.getenv('VULNERS_API_KEY')
     if vulners_api_key:
         vul_api = vulners.Vulners(api_key=vulners_api_key)
-        exploit_results = vul_api.searchExploit(cve)
+        exploit_results = vul_api.searchExploit(cve_id)
         exploits = [exploit["title"] + " - " + exploit.get("href", "") for exploit in exploit_results.get('data', [])]
         return exploits
     else:
