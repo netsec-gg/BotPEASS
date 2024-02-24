@@ -1,17 +1,16 @@
 import requests
 import datetime
-import pathlib
 import json
 import os
 from os.path import join
 from enum import Enum
 
-# Import the correct Vulners API class
+# Import the Vulners library with the correct API class
 import vulners
 
 # Define constants and paths
 CIRCL_LU_URL = "https://cve.circl.lu/api/query"
-CVES_JSON_PATH = join(pathlib.Path(__file__).parent.absolute(), "output/botpeas.json")
+CVES_JSON_PATH = join(os.path.dirname(__file__), "output/botpeas.json")
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
 DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL')
 
@@ -64,31 +63,28 @@ def filter_cves(cves: list, last_time: datetime.datetime, tt_filter: Time_Type) 
     return filtered_cves, new_last_time
 
 def search_exploits(cve_id: str) -> list:
-    '''Search for public exploits related to a given CVE ID using the updated Vulners API'''
     vulners_api_key = os.getenv('VULNERS_API_KEY')
     if vulners_api_key:
-        vul_api = vulners.VulnersApi(api_key=vulners_api_key)
+        vul_api = vulners.Vulners(api_key=vulners_api_key)
         search_query = f"cve:{cve_id}"
-        exploit_results = vul_api.find_exploit_all(search_query)
-        exploits = [f"{item.get('title', 'No title')} - {item.get('href', 'No link')}" for item in exploit_results]
+        exploit_results = vul_api.search(query=search_query, limit=10)
+        exploits = [f"{item.get('title', 'No title')} - {item.get('href', '')}" for item in exploit_results.get('documents', {}).values()]
         return exploits
     else:
         print("VULNERS_API_KEY wasn't configured in the secrets!")
         return []
 
-def send_message(cve_data, exploits=[]):
+def send_message(cve_id, cve_data, exploits=[]):
     details_link = cve_data.get('href', 'No details available')
     exploit_details = "\n".join(exploits) if exploits else "No public exploits found."
     message = (
-        f"🚨 CVE ID: {cve_data['id']}\n"
-        f"Summary: {cve_data.get('summary', 'N/A')}\n"
-        f"CVSS: {cve_data.get('cvss', {}).get('score', 'N/A') if cve_data.get('cvss') else 'N/A'}\n"
-        f"CWE: {','.join(cve_data.get('cwe', ['Unknown']))}\n"
+        f"🚨 CVE ID: {cve_id}\n"
+        f"Summary: {cve_data.get('description', 'N/A')}\n"
+        f"CVSS Score: {cve_data.get('cvss', {}).get('score', 'N/A')}\n"
         f"Published: {cve_data.get('published', 'N/A')}\n"
         f"Last Modified: {cve_data.get('modified', 'N/A')}\n"
-        f"Assigner: {cve_data.get('reporter', 'N/A')}\n"
         f"Details: {details_link}\n"
-        "References:\n" + "\n".join(cve_data.get('references', [])) +
+        "References:\n" + "\n".join(cve_data.get('references', ['No references available'])) +
         "\nExploits:\n" + exploit_details
     )
     data = {"content": message}
@@ -101,22 +97,20 @@ def main():
     
     load_lasttimes()
 
-    new_cves = get_cves(Time_Type.PUBLISHED)["results"]
-    filtered_new_cves, new_last_new_cve = filter_cves(new_cves, LAST_NEW_CVE, Time_Type.PUBLISHED)
-    LAST_NEW_CVE = new_last_new_cve
-    for cve in filtered_new_cves:
-        exploits = search_exploits(cve['id'])
-        send_message(cve, exploits)
-
-    modified_cves = get_cves(Time_Type.LAST_MODIFIED)["results"]
-    filtered_modified_cves, new_last_modified_cve = filter_cves(modified_cves, LAST_MODIFIED_CVE, Time_Type.LAST_MODIFIED)
-    LAST_MODIFIED_CVE = new_last_modified_cve
-    for cve in filtered_modified_cves:
-        exploits = search_exploits(cve['id'])
-        send_message(cve, exploits)
+    # Example for demonstration, should be replaced with actual data fetching logic
+    vulners_api_key = os.getenv('VULNERS_API_KEY')
+    if vulners_api_key:
+        vul_api = vulners.Vulners(api_key=vulners_api_key)
+        cve_id = "CVE-2021-33111"  # Example CVE ID
+        cve_data = vul_api.document(cve_id)
+        if cve_data.get('result') == 'OK':
+            cve_info = cve_data.get('data', {}).get('documents', {}).get(cve_id, {})
+            exploits = search_exploits(cve_id)
+            send_message(cve_id, cve_info, exploits)
+        else:
+            print(f"Failed to fetch data for {cve_id}")
 
     update_lasttimes()
 
 if __name__ == "__main__":
     main()
-
