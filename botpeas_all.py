@@ -17,7 +17,6 @@ DISCORD_WEBHOOK_URL = os.getenv('DISCORD_WEBHOOK_URL')
 LAST_NEW_CVE = datetime.datetime.now() - datetime.timedelta(days=1)
 LAST_MODIFIED_CVE = datetime.datetime.now() - datetime.timedelta(days=1)
 
-# Enum for time type filtering
 class Time_Type(Enum):
     PUBLISHED = "Published"
     LAST_MODIFIED = "last-modified"
@@ -62,25 +61,19 @@ def filter_cves(cves: list, last_time: datetime.datetime, tt_filter: Time_Type) 
                 new_last_time = cve_time
     return filtered_cves, new_last_time
 
-def search_exploits(cve: str) -> list:
-    ''' Given a CVE it will search for public exploits to abuse it '''
-    
-    return []
-    #TODO: Find a better way to discover exploits
-
+def search_exploits(cve_id: str) -> list:
     vulners_api_key = os.getenv('VULNERS_API_KEY')
-    
     if vulners_api_key:
-        vulners_api = vulners.Vulners(api_key=vulners_api_key)
-        cve_data = vulners_api.searchExploit(cve)
-        return [v['vhref'] for v in cve_data]
-    
+        vul_api = vulners.Vulners(api_key=vulners_api_key)
+        exploit_results = vul_api.searchExploit(cve)
+        exploits = [exploit["title"] + " - " + exploit.get("href", "") for exploit in exploit_results.get('data', [])]
+        return exploits
     else:
         print("VULNERS_API_KEY wasn't configured in the secrets!")
-    
-    return []
+        return []
 
 def send_message(cve_data, exploits=[]):
+    exploit_details = "\n".join(exploits) if exploits else "No public exploits found."
     message = (
         f"🚨 CVE ID: {cve_data['id']}\n"
         f"Summary: {cve_data.get('summary', 'N/A')}\n"
@@ -89,10 +82,9 @@ def send_message(cve_data, exploits=[]):
         f"Published: {cve_data.get('Published', 'N/A')}\n"
         f"Last Modified: {cve_data.get('last-modified', 'N/A')}\n"
         f"Assigner: {cve_data.get('assigner', 'N/A')}\n"
-        "References:\n" + "\n".join(cve_data.get('references', []))
+        "References:\n" + "\n".join(cve_data.get('references', [])) +
+        "\nExploits:\n" + exploit_details
     )
-    if exploits:
-        message += "\nExploits:\n" + "\n".join(exploits)
     data = {"content": message}
     response = requests.post(DISCORD_WEBHOOK_URL, json=data)
     if response.status_code != 204:
@@ -103,7 +95,6 @@ def main():
     
     load_lasttimes()
 
-    # Process new CVEs
     new_cves = get_cves(Time_Type.PUBLISHED)["results"]
     filtered_new_cves, new_last_new_cve = filter_cves(new_cves, LAST_NEW_CVE, Time_Type.PUBLISHED)
     LAST_NEW_CVE = new_last_new_cve
@@ -111,7 +102,6 @@ def main():
         exploits = search_exploits(cve['id'])
         send_message(cve, exploits)
 
-    # Process modified CVEs
     modified_cves = get_cves(Time_Type.LAST_MODIFIED)["results"]
     filtered_modified_cves, new_last_modified_cve = filter_cves(modified_cves, LAST_MODIFIED_CVE, Time_Type.LAST_MODIFIED)
     LAST_MODIFIED_CVE = new_last_modified_cve
@@ -123,5 +113,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
