@@ -62,11 +62,13 @@ def filter_cves(cves: list, last_time: datetime.datetime, tt_filter: Time_Type) 
     return filtered_cves, new_last_time
 
 def search_exploits(cve_id: str) -> list:
+    '''Search for public exploits related to a given CVE ID using the updated Vulners API'''
     vulners_api_key = os.getenv('VULNERS_API_KEY')
     if vulners_api_key:
-        vul_api = vulners.Vulners(api_key=vulners_api_key)
-        exploit_results = vul_api.searchExploit(cve_id)
-        exploits = [exploit["title"] + " - " + exploit.get("href", "") for exploit in exploit_results.get('data', [])]
+        vul_api = vulners.VulnersApi(api_key=vulners_api_key)
+        search_query = f"cve:{cve_id}"
+        exploit_results = vul_api.find_exploit_all(search_query)
+        exploits = [f"{item.get('title', 'No title')} - {item.get('href', 'No link')}" for item in exploit_results]
         return exploits
     else:
         print("VULNERS_API_KEY wasn't configured in the secrets!")
