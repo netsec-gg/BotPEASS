@@ -18,6 +18,52 @@ DESCRIPTION_KEYWORDS_I:
 - kubernetes
 - " lxc "
 - podman
+- "remote code execution"
+- "arbitrary code execution"
+- "buffer overflow"
+- "stack overflow"
+- "heap overflow"
+- "race condition"
+- "use after free"
+- "directory traversal"
+- "path traversal"
+- "insecure file permissions"
+- "insecure default configuration"
+- "security misconfiguration"
+- "cross-site scripting"
+- "SQL injection"
+- "command injection"
+- "local file inclusion"
+- "remote file inclusion"
+- "deserialization vulnerability"
+- "insecure direct object references"
+- "broken access control"
+- "session fixation"
+- "session hijacking"
+- "cross-site request forgery"
+- "XML external entity attack"
+- "server-side request forgery"
+- "insecure deserialization"
+- "API misuse"
+- "cryptographic issues"
+- "exposed dangerous method or function"
+- "hard-coded credentials"
+- "security feature bypass"
+- "uncontrolled search path element"
+- "unrestricted upload of file with dangerous type"
+- "memory corruption"
+- "information disclosure"
+- "credential access"
+- "network attack"
+- "persistence"
+- "defense evasion"
+- "privilege escalation technique"
+- "access token manipulation"
+- "application shimming"
+- "bypass user account control"
+- "exploitation for privilege escalation"
+- "file system permissions weaknesses"
+- "sidestepping"
 
 DESCRIPTION_KEYWORDS:
 - ThisIsACaseSensitiveExample
@@ -29,7 +75,78 @@ PRODUCT_KEYWORDS_I:
 - lxc
 - podman
 - container
+- nginx
+- apache
+- iis
+- tomcat
+- weblogic
+- jboss
+- openssh
+- openssl
+- windows
+- linux
+- unix
+- macos
+- ios
+- android
+- oracle
+- sql server
+- mysql
+- postgresql
+- mongodb
+- redis
+- node.js
+- php
+- python
+- ruby
+- java
+- perl
+- vmware
+- hyper-v
+- xen
+- kvm
+- virtualbox
+- firewall
+- router
+- switch
+- vpn
+- active directory
+- ldap
+- samba
+- exchange
+- office 365
+- azure
+- aws
+- gcp
+- cloud foundry
+- salesforce
+- sap
+- jira
+- confluence
+- wordpress
+- drupal
+- joomla
+- elasticsearch
+- kibana
+- logstash
+- beats
+- grafana
+- prometheus
+- splunk
+- zabbix
+- nagios
+- cisco
+- juniper
+- fortinet
+- palo alto networks
+- symantec
+- mcafee
+- trend micro
+- kaspersky
+- bitdefender
+- avast
 
 PRODUCT_KEYWORDS:
 - ThisIsACaseSensitiveExample
+
 
