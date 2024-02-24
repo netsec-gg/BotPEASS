@@ -75,15 +75,17 @@ def search_exploits(cve_id: str) -> list:
         return []
 
 def send_message(cve_data, exploits=[]):
+    details_link = cve_data.get('href', 'No details available')
     exploit_details = "\n".join(exploits) if exploits else "No public exploits found."
     message = (
         f"🚨 CVE ID: {cve_data['id']}\n"
         f"Summary: {cve_data.get('summary', 'N/A')}\n"
-        f"CVSS: {cve_data.get('cvss', 'N/A')}\n"
-        f"CWE: {cve_data.get('cwe', 'Unknown')}\n"
-        f"Published: {cve_data.get('Published', 'N/A')}\n"
-        f"Last Modified: {cve_data.get('last-modified', 'N/A')}\n"
-        f"Assigner: {cve_data.get('assigner', 'N/A')}\n"
+        f"CVSS: {cve_data.get('cvss', {}).get('score', 'N/A')}\n"
+        f"CWE: {','.join(cve_data.get('cwe', ['Unknown']))}\n"
+        f"Published: {cve_data.get('published', 'N/A')}\n"
+        f"Last Modified: {cve_data.get('modified', 'N/A')}\n"
+        f"Assigner: {cve_data.get('reporter', 'N/A')}\n"
+        f"Details: {details_link}\n"
         "References:\n" + "\n".join(cve_data.get('references', [])) +
         "\nExploits:\n" + exploit_details
     )
@@ -115,3 +117,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
