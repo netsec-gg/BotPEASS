@@ -62,15 +62,23 @@ def filter_cves(cves: list, last_time: datetime.datetime, tt_filter: Time_Type) 
                 new_last_time = cve_time
     return filtered_cves, new_last_time
 
-def search_exploits(cve_id: str) -> list:
+def search_exploits(cve: str) -> list:
+    ''' Given a CVE it will search for public exploits to abuse it '''
+    
+    return []
+    #TODO: Find a better way to discover exploits
+
     vulners_api_key = os.getenv('VULNERS_API_KEY')
+    
     if vulners_api_key:
-        vul_api = vulners.Vulners(api_key=vulners_api_key)
-        exploits = vul_api.searchExploits(query=f"\"{cve_id}\"")
-        return [exploit['title'] for exploit in exploits.get('data', []) if 'title' in exploit]
+        vulners_api = vulners.Vulners(api_key=vulners_api_key)
+        cve_data = vulners_api.searchExploit(cve)
+        return [v['vhref'] for v in cve_data]
+    
     else:
-        print("VULNERS_API_KEY is not set. Skipping exploit search.")
-        return []
+        print("VULNERS_API_KEY wasn't configured in the secrets!")
+    
+    return []
 
 def send_message(cve_data, exploits=[]):
     message = (
